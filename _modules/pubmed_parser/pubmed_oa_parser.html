@@ -1,22 +1,20 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pubmed_parser.pubmed_oa_parser &mdash; Pubmed Parser 0.4.0 documentation</title>
+  <title>pubmed_parser.pubmed_oa_parser &mdash; Pubmed Parser 0.1.dev350+g90de0ef documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=4e78f113"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=20334e78"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -33,9 +31,6 @@
           <a href="../../index.html" class="icon icon-home">
             Pubmed Parser
           </a>
-              <div class="version">
-                0.4.0
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -165,6 +160,38 @@
     <span class="k">return</span> <span class="n">dict_article_meta</span>
 
 
+<span class="k">def</span> <span class="nf">parse_date</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">date_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse publication dates based on the provided date type.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">get_text</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="n">pub_date_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;.//pub-date[@pub-type=&#39;</span><span class="si">{</span><span class="n">date_type</span><span class="si">}</span><span class="s2">&#39; or @date-type=&#39;</span><span class="si">{</span><span class="n">date_type</span><span class="si">}</span><span class="s2">&#39;]&quot;</span>
+    <span class="n">date_node</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="n">pub_date_path</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">date_node</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="n">date_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">,</span> <span class="s2">&quot;day&quot;</span><span class="p">]:</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">get_text</span><span class="p">(</span><span class="n">date_node</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">part</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">date_dict</span><span class="p">[</span><span class="n">part</span><span class="p">]</span> <span class="o">=</span> <span class="n">text</span>
+
+    <span class="k">return</span> <span class="n">date_dict</span>
+
+
+<span class="k">def</span> <span class="nf">format_date</span><span class="p">(</span><span class="n">date_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format date dictionary to a string in the format day-month-year.&quot;&quot;&quot;</span>
+    <span class="n">day</span> <span class="o">=</span> <span class="n">date_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;day&quot;</span><span class="p">,</span> <span class="s2">&quot;01&quot;</span><span class="p">)</span>
+    <span class="n">month</span> <span class="o">=</span> <span class="n">date_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;month&quot;</span><span class="p">,</span> <span class="s2">&quot;01&quot;</span><span class="p">)</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="n">date_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">year</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">day</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">month</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">year</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">day</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">month</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
 <span class="k">def</span> <span class="nf">parse_coi_statements</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parse conflict of interest statements from given article tree</span>
@@ -182,7 +209,9 @@
             <span class="k">yield</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">itertext</span><span class="p">())</span>
 
 
-<div class="viewcode-block" id="parse_pubmed_xml"><a class="viewcode-back" href="../../api.html#pubmed_parser.parse_pubmed_xml">[docs]</a><span class="k">def</span> <span class="nf">parse_pubmed_xml</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">include_path</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nxml</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="parse_pubmed_xml">
+<a class="viewcode-back" href="../../api.html#pubmed_parser.parse_pubmed_xml">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_pubmed_xml</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">include_path</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nxml</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Given an input XML path to PubMed XML file, extract information and metadata</span>
 <span class="sd">    from a given XML file and return parsed XML file in dictionary format.</span>
@@ -206,7 +235,7 @@
 <span class="sd">        A dictionary contains a following keys from a parsed XML path</span>
 <span class="sd">        &#39;full_title&#39;, &#39;abstract&#39;, &#39;journal&#39;, &#39;pmid&#39;, &#39;pmc&#39;, &#39;doi&#39;,</span>
 <span class="sd">        &#39;publisher_id&#39;, &#39;author_list&#39;, &#39;affiliation_list&#39;, &#39;publication_year&#39;,</span>
-<span class="sd">        &#39;publication_date&#39;, &#39;subjects&#39;</span>
+<span class="sd">        &#39;publication_date&#39;, &#39;epublication_date&#39; ,&#39;subjects&#39;</span>
 <span class="sd">    }</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">tree</span> <span class="o">=</span> <span class="n">read_xml</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">nxml</span><span class="p">)</span>
@@ -234,17 +263,23 @@
 
     <span class="n">journal_node</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;.//journal-title&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">journal_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">journal</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">j</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">journal_node</span><span class="p">])</span>
+        <span class="n">journal</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">itertext</span><span class="p">())</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">journal_node</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">journal</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
     <span class="n">dict_article_meta</span> <span class="o">=</span> <span class="n">parse_article_meta</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
-    <span class="n">pub_year_node</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//pub-date/year&quot;</span><span class="p">)</span>
-    <span class="n">pub_year</span> <span class="o">=</span> <span class="n">pub_year_node</span><span class="o">.</span><span class="n">text</span> <span class="k">if</span> <span class="n">pub_year_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">pub_month_node</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//pub-date/month&quot;</span><span class="p">)</span>
-    <span class="n">pub_month</span> <span class="o">=</span> <span class="n">pub_month_node</span><span class="o">.</span><span class="n">text</span> <span class="k">if</span> <span class="n">pub_month_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;01&quot;</span>
-    <span class="n">pub_day_node</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//pub-date/day&quot;</span><span class="p">)</span>
-    <span class="n">pub_day</span> <span class="o">=</span> <span class="n">pub_day_node</span><span class="o">.</span><span class="n">text</span> <span class="k">if</span> <span class="n">pub_day_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;01&quot;</span>
+
+    <span class="n">pub_date_dict</span> <span class="o">=</span> <span class="n">parse_date</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="s2">&quot;ppub&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;year&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pub_date_dict</span><span class="p">:</span>
+        <span class="n">pub_date_dict</span> <span class="o">=</span> <span class="n">parse_date</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">)</span>
+    <span class="n">pub_date</span> <span class="o">=</span> <span class="n">format_date</span><span class="p">(</span><span class="n">pub_date_dict</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pub_year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pub_date_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;year&quot;</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="n">pub_year</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">epub_date</span> <span class="o">=</span> <span class="n">format_date</span><span class="p">(</span><span class="n">parse_date</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="s2">&quot;epub&quot;</span><span class="p">))</span>
 
     <span class="n">subjects_node</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;.//article-categories//subj-group/subject&quot;</span><span class="p">)</span>
     <span class="n">subjects</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
@@ -304,13 +339,15 @@
         <span class="s2">&quot;author_list&quot;</span><span class="p">:</span> <span class="n">author_list</span><span class="p">,</span>
         <span class="s2">&quot;affiliation_list&quot;</span><span class="p">:</span> <span class="n">affiliation_list</span><span class="p">,</span>
         <span class="s2">&quot;publication_year&quot;</span><span class="p">:</span> <span class="n">pub_year</span><span class="p">,</span>
-        <span class="s2">&quot;publication_date&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pub_day</span><span class="p">,</span> <span class="n">pub_month</span><span class="p">,</span> <span class="n">pub_year</span><span class="p">),</span>
+        <span class="s2">&quot;publication_date&quot;</span><span class="p">:</span> <span class="n">pub_date</span><span class="p">,</span>
+        <span class="s2">&quot;epublication_date&quot;</span><span class="p">:</span> <span class="n">epub_date</span><span class="p">,</span>
         <span class="s2">&quot;subjects&quot;</span><span class="p">:</span> <span class="n">subjects</span><span class="p">,</span>
         <span class="s2">&quot;coi_statement&quot;</span><span class="p">:</span> <span class="n">coi_statement</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="k">if</span> <span class="n">include_path</span><span class="p">:</span>
         <span class="n">dict_out</span><span class="p">[</span><span class="s2">&quot;path_to_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span>
     <span class="k">return</span> <span class="n">dict_out</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">get_reference</span><span class="p">(</span><span class="n">reference</span><span class="p">):</span>
@@ -322,7 +359,9 @@
     <span class="k">return</span> <span class="kc">None</span>
 
 
-<div class="viewcode-block" id="parse_pubmed_references"><a class="viewcode-back" href="../../api.html#pubmed_parser.parse_pubmed_references">[docs]</a><span class="k">def</span> <span class="nf">parse_pubmed_references</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<div class="viewcode-block" id="parse_pubmed_references">
+<a class="viewcode-back" href="../../api.html#pubmed_parser.parse_pubmed_references">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_pubmed_references</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Given path to xml file, parse references articles</span>
 <span class="sd">    to list of dictionary</span>
@@ -411,7 +450,10 @@
     <span class="k">return</span> <span class="n">dict_refs</span></div>
 
 
-<div class="viewcode-block" id="parse_pubmed_paragraph"><a class="viewcode-back" href="../../api.html#pubmed_parser.parse_pubmed_paragraph">[docs]</a><span class="k">def</span> <span class="nf">parse_pubmed_paragraph</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">all_paragraph</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+<div class="viewcode-block" id="parse_pubmed_paragraph">
+<a class="viewcode-back" href="../../api.html#pubmed_parser.parse_pubmed_paragraph">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_pubmed_paragraph</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Give path to a given PubMed OA file, parse and return</span>
 <span class="sd">    a dictionary of all paragraphs, section that it belongs to,</span>
@@ -421,13 +463,6 @@
 <span class="sd">    ----------</span>
 <span class="sd">    path: str</span>
 <span class="sd">        A string to an XML path.</span>
-<span class="sd">    all_paragraph: bool</span>
-<span class="sd">        By default, this function will only append a paragraph if there is at least</span>
-<span class="sd">        one reference made in a paragraph (to aviod noisy parsed text).</span>
-<span class="sd">        A boolean indicating if you want to include paragraph with no references made or not</span>
-<span class="sd">        if True, include all paragraphs</span>
-<span class="sd">        if False, include only paragraphs that have references</span>
-<span class="sd">        default: False</span>
 
 <span class="sd">    Return</span>
 <span class="sd">    ------</span>
@@ -465,13 +500,16 @@
             <span class="s2">&quot;section&quot;</span><span class="p">:</span> <span class="n">section</span><span class="p">,</span>
             <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">paragraph_text</span><span class="p">,</span>
         <span class="p">}</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_ids</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">all_paragraph</span><span class="p">:</span>
-            <span class="n">dict_pars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dict_par</span><span class="p">)</span>
+
+        <span class="n">dict_pars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dict_par</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">dict_pars</span></div>
 
 
-<div class="viewcode-block" id="parse_pubmed_caption"><a class="viewcode-back" href="../../api.html#pubmed_parser.parse_pubmed_caption">[docs]</a><span class="k">def</span> <span class="nf">parse_pubmed_caption</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+
+<div class="viewcode-block" id="parse_pubmed_caption">
+<a class="viewcode-back" href="../../api.html#pubmed_parser.parse_pubmed_caption">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_pubmed_caption</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Given single xml path, extract figure caption and</span>
 <span class="sd">    reference id back to that figure</span>
@@ -547,6 +585,7 @@
     <span class="k">return</span> <span class="n">dict_captions</span></div>
 
 
+
 <span class="k">def</span> <span class="nf">table_to_df</span><span class="p">(</span><span class="n">table_text</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a function to transform an input table XML text to list of row values and columns.</span>
@@ -586,7 +625,9 @@
         <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
 
-<div class="viewcode-block" id="parse_pubmed_table"><a class="viewcode-back" href="../../api.html#pubmed_parser.parse_pubmed_table">[docs]</a><span class="k">def</span> <span class="nf">parse_pubmed_table</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">return_xml</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="parse_pubmed_table">
+<a class="viewcode-back" href="../../api.html#pubmed_parser.parse_pubmed_table">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_pubmed_table</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">return_xml</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parse table from given Pubmed Open-Access XML file</span>
 
@@ -658,6 +699,7 @@
         <span class="k">return</span> <span class="n">table_dicts</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span></div>
+
 </pre></div>
 
            </div>
