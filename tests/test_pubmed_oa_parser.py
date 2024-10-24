@@ -19,9 +19,14 @@ def fetch_pubmed_xml(db_dir):
 # Get up-to-date pubmed online article
 pubmed_dir = {"3460867": "00/00/PMC3460867",
               "28298962": "8e/71/PMC5334499",
-              "9539395": "51/b3/PMC9539395"
+              "9539395": "51/b3/PMC9539395",
+              "1280406": "5f/92/PMC1280406",
+              "30443433": "6f/c7/PMC6218202"
               }
 pubmed_xml_3460867 = fetch_pubmed_xml(pubmed_dir['3460867'])
+pubmed_xml_1280406 = fetch_pubmed_xml(pubmed_dir['1280406'])
+pubmed_xml_30443433 = fetch_pubmed_xml(pubmed_dir['30443433'])
+
 
 pubmed_xml_9539395 = fetch_pubmed_xml(pubmed_dir['9539395'])
 captions_9539395 = pp.parse_pubmed_caption(pubmed_xml_9539395)
@@ -39,6 +44,19 @@ def test_parse_pubmed_xml():
     assert parsed_xml.get("doi") == "10.1371/journal.pone.0046493"
     assert parsed_xml.get("subjects") == "Research Article; Biology; Biochemistry; Enzymes; Enzyme Metabolism; Lipids; Fatty Acids; Glycerides; Lipid Metabolism; Neutral Lipids; Metabolism; Lipid Metabolism; Proteins; Globular Proteins; Protein Classes; Recombinant Proteins; Biotechnology; Microbiology; Bacterial Pathogens; Bacteriology; Emerging Infectious Diseases; Host-Pathogen Interaction; Microbial Growth and Development; Microbial Metabolism; Microbial Pathogens; Microbial Physiology; Proteomics; Sequence Analysis; Spectrometric Identification of Proteins"  # noqa
     assert "Competing Interests: " in parsed_xml.get("coi_statement")
+    assert parsed_xml.get("journal") == "PLoS ONE"
+    assert parsed_xml.get('publication_year') == 2012
+    assert parsed_xml.get('publication_date') == '01-01-2012'
+    assert parsed_xml.get('epublication_date') == '28-9-2012'
+
+    parsed_1280406 = pp.parse_pubmed_xml(pubmed_xml_1280406)
+    assert parsed_1280406.get('publication_year') == 2005
+    assert parsed_1280406.get('publication_date') == "01-9-2005"
+    assert parsed_1280406.get('epublication_date') == "31-5-2005"
+
+    parsed_30443433 = pp.parse_pubmed_xml(pubmed_xml_30443433)
+    assert parsed_30443433.get('publication_year') is None
+    assert parsed_30443433.get('publication_date') == "01-01"
 
 
 def test_parse_pubmed_paragraph():
@@ -48,7 +66,7 @@ def test_parse_pubmed_paragraph():
     paragraphs = pp.parse_pubmed_paragraph(pubmed_xml_3460867)
     assert isinstance(paragraphs, list)
     assert isinstance(paragraphs[0], dict)
-    assert len(paragraphs) == 29, "Expected number of paragraphs to be 29"
+    assert len(paragraphs) == 58, "Expected number of paragraphs to be 58"
     assert (
         len(paragraphs[0]["reference_ids"]) == 11
     ), "Expected number of references in the first paragraph to be 11"

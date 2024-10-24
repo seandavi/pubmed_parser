@@ -87,6 +87,38 @@ def parse_article_meta(tree):
     return dict_article_meta
 
 
+def parse_date(tree, date_type):
+    """Parse publication dates based on the provided date type."""
+    def get_text(node):
+        return node.text if node is not None else None
+
+    pub_date_path = f".//pub-date[@pub-type='{date_type}' or @date-type='{date_type}']"
+    date_node = tree.xpath(pub_date_path)
+    
+    if not date_node:
+        return {}
+
+    date_dict = {}
+    for part in ["year", "month", "day"]:
+        text = get_text(date_node[0].find(part))
+        if text is not None:
+            date_dict[part] = text
+
+    return date_dict
+
+
+def format_date(date_dict):
+    """Format date dictionary to a string in the format day-month-year."""
+    day = date_dict.get("day", "01")
+    month = date_dict.get("month", "01")
+    year = date_dict.get("year", "")
+
+    if year:
+        return f"{day}-{month}-{year}"
+    else:
+        return f"{day}-{month}"
+
+
 def parse_coi_statements(tree):
     """
     Parse conflict of interest statements from given article tree
@@ -128,7 +160,7 @@ def parse_pubmed_xml(path, include_path=False, nxml=False):
         A dictionary contains a following keys from a parsed XML path
         'full_title', 'abstract', 'journal', 'pmid', 'pmc', 'doi',
         'publisher_id', 'author_list', 'affiliation_list', 'publication_year',
-        'publication_date', 'subjects'
+        'publication_date', 'epublication_date' ,'subjects'
     }
     """
     tree = read_xml(path, nxml)
@@ -156,17 +188,23 @@ def parse_pubmed_xml(path, include_path=False, nxml=False):
 
     journal_node = tree.findall(".//journal-title")
     if journal_node is not None:
-        journal = " ".join([j.text for j in journal_node])
+        journal = " ".join(["".join(node.itertext()) for node in journal_node])
     else:
         journal = ""
 
     dict_article_meta = parse_article_meta(tree)
-    pub_year_node = tree.find(".//pub-date/year")
-    pub_year = pub_year_node.text if pub_year_node is not None else ""
-    pub_month_node = tree.find(".//pub-date/month")
-    pub_month = pub_month_node.text if pub_month_node is not None else "01"
-    pub_day_node = tree.find(".//pub-date/day")
-    pub_day = pub_day_node.text if pub_day_node is not None else "01"
+
+    pub_date_dict = parse_date(tree, "ppub")
+    if "year" not in pub_date_dict:
+        pub_date_dict = parse_date(tree, "collection")
+    pub_date = format_date(pub_date_dict)
+
+    try:
+        pub_year = int(pub_date_dict.get("year"))
+    except TypeError:
+        pub_year = None
+
+    epub_date = format_date(parse_date(tree, "epub"))
 
     subjects_node = tree.findall(".//article-categories//subj-group/subject")
     subjects = list()
@@ -226,7 +264,8 @@ def parse_pubmed_xml(path, include_path=False, nxml=False):
         "author_list": author_list,
         "affiliation_list": affiliation_list,
         "publication_year": pub_year,
-        "publication_date": "{}-{}-{}".format(pub_day, pub_month, pub_year),
+        "publication_date": pub_date,
+        "epublication_date": epub_date,
         "subjects": subjects,
         "coi_statement": coi_statement,
     }
@@ -333,7 +372,7 @@ def parse_pubmed_references(path):
     return dict_refs
 
 
-def parse_pubmed_paragraph(path, all_paragraph=False):
+def parse_pubmed_paragraph(path):
     """
     Give path to a given PubMed OA file, parse and return
     a dictionary of all paragraphs, section that it belongs to,
@@ -343,13 +382,6 @@ def parse_pubmed_paragraph(path, all_paragraph=False):
     ----------
     path: str
         A string to an XML path.
-    all_paragraph: bool
-        By default, this function will only append a paragraph if there is at least
-        one reference made in a paragraph (to aviod noisy parsed text).
-        A boolean indicating if you want to include paragraph with no references made or not
-        if True, include all paragraphs
-        if False, include only paragraphs that have references
-        default: False
 
     Return
     ------
@@ -387,8 +419,8 @@ def parse_pubmed_paragraph(path, all_paragraph=False):
             "section": section,
             "text": paragraph_text,
         }
-        if len(ref_ids) >= 1 or all_paragraph:
-            dict_pars.append(dict_par)
+
+        dict_pars.append(dict_par)
 
     return dict_pars
 
