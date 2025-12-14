@@ -427,7 +427,7 @@ def parse_author_affiliation(medline):
                         c.replace(
                             "For a full list of the authors' affiliations please see the Acknowledgements section.",
                             "",
-                        ) for c in affiliation
+                        ) for c in affiliation if c is not None
                     ]
                     affiliation = "|".join(affiliation)
                 else:
