@@ -2,14 +2,12 @@
 Parsers for MEDLINE XML
 """
 import re
-import numpy as np
 import gzip
 from itertools import chain
-from lxml import etree
-from collections import defaultdict
-from pubmed_parser.utils import read_xml, stringify_children, month_or_day_formater
 
-__all__ = ["parse_medline_xml",  "parse_grant_id", "split_mesh"]
+from lxml import etree
+
+from pubmed_parser.utils import read_xml, stringify_children, month_or_day_formater
 
 
 def parse_pmid(pubmed_article):
@@ -568,6 +566,7 @@ def parse_article_info(
         if True, parse reference list as an output
     parse_subs: bool
         if True, parse mesh terms with subterms
+
     Returns
     -------
     article: dict
@@ -580,10 +579,10 @@ def parse_article_info(
     medline = pubmed_article.find("MedlineCitation")
     article = medline.find("Article")
 
-    if article.find("ArticleTitle") is not None:
-        title = stringify_children(article.find("ArticleTitle")).strip() or ""
-    else:
-        title = ""
+    try:
+        title = stringify_children(article.find("ArticleTitle")) or None
+    except AttributeError:
+        title = None
 
     if article.find("Journal/JournalIssue/Volume") is not None:
         volume = article.find("Journal/JournalIssue/Volume").text or ""
@@ -703,8 +702,7 @@ def parse_medline_xml(
     parse_downto_mesh_subterms=False
 ):
     """Parse XML file from Medline XML format available at
-    https://ftp.ncbi.nlm.nih.gov/pubmed/
-    
+    https://ftp.ncbi.nlm.nih.gov/pubmed/.
     
     Parameters
     ----------
@@ -734,7 +732,7 @@ def parse_medline_xml(
         default: False
     parse_downto_mesh_subterms: bool
         if True, return mesh terms concatenated with "; " and mesh subterms concatenated " / "
-                and appended with * if the subterm is major
+        and appended with * if the subterm is major
         if False, return mesh_terms concatenated with "; "
         default: False
 
@@ -742,17 +740,29 @@ def parse_medline_xml(
     ------
     An iterator of dictionary containing information about articles in NLM format.
         see `parse_article_info`). Articles that have been deleted will be
-        added with no information other than the field `delete` being `True`
+        added with no information other than the fields `delete` being `True`,
+        and `pmid`.
 
     Examples
     --------
     >>> article_iterator = pubmed_parser.parse_medline_xml('data/pubmed20n0014.xml.gz')
     >>> for article in article_iterator:
-    ...     print(article['title'])
+    ...     if article.get('delete'):
+    ...         print(f"Deleted PMID: {article['pmid']}")
+    ...     else:
+    ...         print(article['title'])
     """
     with gzip.open(path, "rb") as f:
         for event, element in etree.iterparse(f, events=("end",)):
-            if element.tag == "PubmedArticle":
+            # Handle <DeleteCitation> elements, indicating articles removed from PubMed.
+            if element.tag == "DeleteCitation":
+                # These elements are expected to contain one or more PMID tags.
+                for child in element.iterchildren():
+                    assert child.tag == "PMID", f"PMID tag expected. Got: {child.tag}"
+                    yield {"pmid": child.text, "delete": True}
+                element.clear()
+
+            elif element.tag == "PubmedArticle":
                 res = parse_article_info(
                     element,
                     year_info_only,

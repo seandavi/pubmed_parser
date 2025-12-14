@@ -2,18 +2,12 @@
 Parsers for PubMed XML
 """
 import os
-from lxml import etree
 from itertools import chain
-from .utils import read_xml, stringify_affiliation_rec, stringify_children
+
+from lxml import etree
 from unidecode import unidecode
 
-__all__ = [
-    "list_xml_path",
-    "parse_pubmed_xml",
-    "parse_pubmed_paragraph",
-    "parse_pubmed_references",
-    "parse_pubmed_caption",
-]
+from .utils import read_xml, stringify_affiliation_rec, stringify_children
 
 
 def list_xml_path(path_dir):
@@ -160,8 +154,7 @@ def parse_pubmed_xml(path, include_path=False, nxml=False):
         A dictionary contains a following keys from a parsed XML path
         'full_title', 'abstract', 'journal', 'pmid', 'pmc', 'doi',
         'publisher_id', 'author_list', 'affiliation_list', 'publication_year',
-        'publication_date', 'epublication_date' ,'subjects'
-    }
+        'publication_date', 'epublication_date', 'subjects'
     """
     tree = read_xml(path, nxml)
 
@@ -201,7 +194,7 @@ def parse_pubmed_xml(path, include_path=False, nxml=False):
 
     try:
         pub_year = int(pub_date_dict.get("year"))
-    except TypeError:
+    except (TypeError, KeyError):
         pub_year = None
 
     epub_date = format_date(parse_date(tree, "epub"))
@@ -471,7 +464,7 @@ def parse_pubmed_caption(path):
 
             fig_captions = fig.find("caption")
             if fig_captions is not None:
-                fig_captions = fig_captions.getchildren()
+                fig_captions = fig_captions.getchildren()[:1]
                 caption = " ".join([stringify_children(c) for c in fig_captions])
 
             graphic = fig.find("graphic")

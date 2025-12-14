@@ -1,5 +1,6 @@
-import pubmed_parser as pp
 import random
+
+import pubmed_parser as pp
 
 
 def test_pubmed_web_parser_all_fields_content():
@@ -96,4 +97,4 @@ def test_version():
 
     xml_21113338 = pp.parse_xml_web('21113338')
     assert xml_21113338['version_id'] == '3'
-    assert xml_21113338['version_date'] is None
+    assert xml_21113338['version_date'] == '2011/04/07'

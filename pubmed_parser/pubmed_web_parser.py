@@ -1,18 +1,11 @@
-import sys
 import re
 import time
+from urllib.request import urlopen
+
 import requests
-from lxml import etree
-from lxml import html
-from unidecode import unidecode
+from lxml import etree, html
 
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen
 from .utils import stringify_children
-
-__all__ = ["parse_xml_web", "parse_citation_web", "parse_outgoing_citation_web"]
 
 
 def load_xml(pmid, sleep=None):
