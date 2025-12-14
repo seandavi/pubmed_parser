@@ -106,6 +106,7 @@ def test_affiliation_with_special_text():
     # Verify the result
     assert len(authors) == 1
     assert authors[0]['lastname'] == 'Brown'
-    # The special text should be replaced with empty string, leaving only the valid affiliation
-    # Note: empty string after replace will be filtered out by the join
+    # The special text should be replaced with empty string
+    # Note: the empty string after replace is still joined, creating a leading pipe
+    # This is existing behavior - our fix only prevents the AttributeError
     assert authors[0]['affiliation'] == '|Valid Affiliation'
