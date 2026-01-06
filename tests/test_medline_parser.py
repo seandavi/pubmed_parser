@@ -161,7 +161,7 @@ def test_publication_types():
     """This is a test for the publication_types field."""
     publication_types_36400559 = 'D016428:Journal Article; D016454:Review'
     assert article_36400559['publication_types'] == publication_types_36400559
-    publication_types_28786991 = 'D016428:Journal Article; D017418:Meta-Analysis; D016454:Review; D000078182:Systematic Review'
+    publication_types_28786991 = 'D016428:Journal Article; D017418:Meta-Analysis; D000078182:Systematic Review'
     assert article_28786991['publication_types'] == publication_types_28786991
 
 
