@@ -44,6 +44,43 @@ def parse_pmid(pubmed_article):
     return pmid
 
 
+def parse_date_element(date_element):
+    """
+    Parse a date element (like DateCompleted or DateRevised) from MEDLINE XML
+    
+    Parameters
+    ----------
+    date_element: Element or None
+        The lxml node pointing to a date element (DateCompleted, DateRevised, etc.)
+    
+    Returns
+    -------
+    date_str: str
+        A formatted date string in YYYY-MM-DD format (or partial format if some
+        components are missing). Returns empty string if element is None or missing.
+    """
+    if date_element is None:
+        return ""
+    
+    year = date_element.find("Year")
+    month = date_element.find("Month")
+    day = date_element.find("Day")
+    
+    year_text = year.text if year is not None else None
+    month_text = month_or_day_formater(month.text) if month is not None else None
+    day_text = month_or_day_formater(day.text) if day is not None else None
+    
+    # Build date string based on available components
+    if year_text is None:
+        return ""
+    elif month_text is None:
+        return year_text
+    elif day_text is None:
+        return f"{year_text}-{month_text}"
+    else:
+        return f"{year_text}-{month_text}-{day_text}"
+
+
 def parse_doi(pubmed_article):
     """
     A function to parse DOI from a given Pubmed Article tree
@@ -667,6 +704,8 @@ def parse_article_info(
     keywords = parse_keywords(medline)
     other_id_dict = parse_other_id(medline)
     journal_info_dict = parse_journal_info(medline)
+    date_completed = parse_date_element(medline.find("DateCompleted"))
+    date_revised = parse_date_element(medline.find("DateRevised"))
     dict_out = {
         "title": title,
         "issue": issue,
@@ -684,7 +723,9 @@ def parse_article_info(
         "references": references,
         "delete": False,
         "languages": languages,
-        "vernacular_title": vernacular_title
+        "vernacular_title": vernacular_title,
+        "date_completed": date_completed,
+        "date_revised": date_revised
     }
     if not author_list:
         dict_out.update({"affiliations": affiliations})
