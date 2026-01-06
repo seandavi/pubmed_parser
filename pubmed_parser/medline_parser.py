@@ -67,8 +67,8 @@ def parse_date_element(date_element):
     day = date_element.find("Day")
     
     year_text = year.text if year is not None else None
-    month_text = month_or_day_formater(month.text) if month is not None else None
-    day_text = month_or_day_formater(day.text) if day is not None else None
+    month_text = month_or_day_formater(month.text) if month is not None and month.text is not None else None
+    day_text = month_or_day_formater(day.text) if day is not None and day.text is not None else None
     
     # Build date string based on available components
     if year_text is None:

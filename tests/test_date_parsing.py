@@ -2,6 +2,7 @@
 Tests for date parsing functionality in medline_parser.py
 """
 import os
+import re
 from lxml import etree
 import pubmed_parser as pp
 from pubmed_parser.medline_parser import parse_date_element
@@ -58,6 +59,21 @@ def test_parse_date_element_empty():
     element = etree.fromstring(xml_str)
     result = parse_date_element(element)
     assert result == ""
+
+
+def test_parse_date_element_empty_text():
+    """Test parsing when element exists but has no text content"""
+    xml_str = """
+    <DateCompleted>
+        <Year>2002</Year>
+        <Month></Month>
+        <Day></Day>
+    </DateCompleted>
+    """
+    element = etree.fromstring(xml_str)
+    result = parse_date_element(element)
+    # Should return only the year since month and day have no text
+    assert result == "2002"
 
 
 def test_parse_date_element_month_abbreviation():
@@ -142,7 +158,6 @@ def test_date_format_validation():
     parsed_medline = pp.parse_medline_xml('data/pubmed20n0014.xml.gz')
     articles = list(parsed_medline)
     
-    import re
     # Pattern for YYYY, YYYY-MM, or YYYY-MM-DD
     date_pattern = re.compile(r'^(\d{4}(-\d{2}(-\d{2})?)?)?$')
     
